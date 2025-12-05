@@ -1,34 +1,28 @@
-name: 'Deploy to GitHub Pages'
+name: 'Deploy to GitHub Pages (gh-pages)'
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare artifact
+      - name: Prepare `public` folder
         run: |
           mkdir -p public
-          # copy site files to public folder
           cp -r index.html mobile_itinerary.html README.md package.json server.js public/ || true
-          # copy any public folder if present
           if [ -d "public-assets" ]; then cp -r public-assets/* public/ || true; fi
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v1
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: public
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
+          publish_dir: ./public
+          publish_branch: gh-pages
+          keep_files: false
+          # use GITHUB_TOKEN to push the gh-pages branch
+          github_token: ${{ secrets.GITHUB_TOKEN }}
