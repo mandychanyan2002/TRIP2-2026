@@ -1,0 +1,34 @@
+name: 'Deploy to GitHub Pages'
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p public
+          # copy site files to public folder
+          cp -r index.html mobile_itinerary.html README.md package.json server.js public/ || true
+          # copy any public folder if present
+          if [ -d "public-assets" ]; then cp -r public-assets/* public/ || true; fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1

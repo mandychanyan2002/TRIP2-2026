@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>5天深度高鐵美食文化遊（行動版）</title>
+    <style>
+        /* ---------- 色彩與版型變數（Mobile-first） ---------- */
+        :root{
+            --bg:#F7F6F4;
+            --card:#FFFFFF;
+            --muted:#6B6B6B;
+            --text:#222222;
+            --accent-orange:#E67E22;
+            --accent-red:#D14035;
+            --accent-green:#00897B;
+            --accent-blue:#1565C0;
+            --tag-food:#FFDAB3; /* 橘 */
+            --tag-buy:#D7F7E9;  /* 綠 */
+            --tag-info:#DDE8FF; /* 藍 */
+            --radius:18px;
+            --spacing:16px;
+            --big:18px; /* 基本大字體 */
+        }
+
+        /* Reset & 基本 */
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0; background:var(--bg); color:var(--text);
+            font-family:-apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
+            font-size:var(--big); line-height:1.5; -webkit-font-smoothing:antialiased;
+            -webkit-touch-callout:none; -webkit-user-select:none; -ms-user-select:none; user-select:none;
+            padding-bottom:96px;
+        }
+
+        /* --- 頂部（Tabs + Day Nav）--- */
+        .header{position:sticky; top:0; z-index:50; background:rgba(247,245,240,0.98); backdrop-filter:blur(8px); border-bottom:1px solid rgba(0,0,0,0.04);}
+        .tabs{display:flex; gap:10px; overflow:auto; padding:12px var(--spacing);}
+        .tabs::-webkit-scrollbar{display:none}
+        .tab{flex:0 0 auto; padding:8px 16px; border-radius:999px; font-weight:700; font-size:16px; background:#EEE; color:var(--muted); border:none}
+        .tab.active{background:var(--text); color:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+
+        .day-nav{display:flex; overflow:auto; padding:6px var(--spacing) 14px; gap:12px;}
+        .day-pill{flex:0 0 auto; padding:8px 12px; border-radius:999px; background:transparent; color:var(--muted); font-weight:700}
+        .day-pill.active{background:var(--card); color:var(--text); box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+
+        /* 內容容器 */
+        .wrap{max-width:720px; margin:0 auto; padding:0 var(--spacing);}
+
+        /* 每日大卡（聚焦） */
+        .day-card{background:var(--card); border-radius:var(--radius); padding:16px; margin:18px 0; box-shadow:0 8px 28px rgba(0,0,0,0.06)}
+        .day-header{display:flex; align-items:center; gap:12px}
+        .day-num{width:56px; height:56px; border-radius:14px; background:linear-gradient(180deg,#fff, #f4f4f4); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:18px}
+        .day-title{font-size:20px; font-weight:900}
+
+        /* 卡片型別：景點、餐廳、交通 */
+        .item-card{display:flex; flex-direction:column; gap:10px; margin-top:12px}
+        .spot-card, .food-card, .transport-card{background:linear-gradient(180deg,#fff,#fbfbfb); border-radius:14px; padding:12px; box-shadow:0 8px 20px rgba(0,0,0,0.04)}
+
+        .spot-media{width:100%; height:180px; border-radius:12px; overflow:hidden; background:linear-gradient(90deg,#f0f0f2,#efeef3); display:flex; align-items:flex-end}
+        .spot-media img{width:100%; height:100%; object-fit:cover}
+        .spot-content{padding:8px}
+        .spot-title{font-size:18px; font-weight:800; margin-bottom:6px}
+        .spot-desc{color:var(--muted); font-size:15px}
+
+        .food-title{font-size:17px; font-weight:800; color:var(--accent-orange)}
+        .food-desc{color:#5A4639}
+        .food-tags{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+        .badge{display:inline-block; padding:6px 10px; font-weight:800; border-radius:999px; font-size:13px}
+        .badge.food{background:var(--tag-food); color:#C05500}
+        .badge.buy{background:var(--tag-buy); color:#0C6B47}
+        .badge.info{background:var(--tag-info); color:#114F9C}
+
+        .meta-row{display:flex; gap:10px; align-items:center; margin-top:8px}
+        .meta{font-size:14px; color:var(--muted)}
+
+        .nav-btn{display:inline-flex; align-items:center; gap:8px; padding:12px 14px; border-radius:12px; background:var(--accent-blue); color:#fff; font-weight:800; border:none; font-size:15px}
+        .ghost-btn{background:transparent; border:1px solid rgba(0,0,0,0.06); padding:10px 12px; border-radius:12px}
+
+        /* 交通卡 */
+        .transport-line{display:flex; gap:12px; align-items:center}
+        .transport-icon{width:44px; height:44px; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,0.04)}
+        .transport-desc{font-weight:700}
+
+        /* summary */
+        .summary-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:14px 0}
+        .summary-card{background:var(--card); border-radius:12px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,0.04); cursor:pointer}
+
+        /* footer spacing for mobile */
+        .bottom-gap{height:96px}
+
+        /* === 響應式：更大螢幕微調 === */
+        @media(min-width:720px){
+            body{font-size:18px}
+            .spot-media{height:220px}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="tabs">
+            <button class="tab active" data-key="summary" onclick="switchPlan('summary')">🔍 全方案總覽</button>
+            <button class="tab" data-key="planA" onclick="switchPlan('planA')">A 張家界</button>
+            <button class="tab" data-key="planB" onclick="switchPlan('planB')">B 武漢</button>
+            <button class="tab" data-key="planC" onclick="switchPlan('planC')">C 長沙</button>
+            <button class="tab" data-key="planD" onclick="switchPlan('planD')">D 景德鎮</button>
+        </div>
+        <div class="day-nav" id="dayNav" aria-hidden="true"></div>
+    </div>
+
+    <main class="wrap" id="contentArea"></main>
+
+    <div class="bottom-gap"></div>
+
+    <script>
+        /* ---------- 合併行程資料（以示範為主） ---------- */
+        const travelData = {
+            summary: {
+                plans:[
+                    {id:'planA', title:'Plan A 張家界', color:'#D14035', desc:'山水絕景與原始峰林，體力要求中高。'},
+                    {id:'planB', title:'Plan B 武漢', color:'#D9822B', desc:'江城文化、美食豐富，步行輕鬆。'},
+                    {id:'planC', title:'Plan C 長沙', color:'#00897B', desc:'美食之都，交通最快，高性價比。'},
+                    {id:'planD', title:'Plan D 景德鎮', color:'#1565C0', desc:'瓷都文創與古窯工藝，適合文青慢遊。'}
+                ]
+            },
+            planA: {
+                days:["Day 1 抵達與開胃","Day 2 袁家界","Day 3 天子山","Day 4 天門山","Day 5 返程"],
+                content:[
+                    [
+                        {type:'transport', mode:'train', route:'深圳北 → 張家界西', time:'約 6.5 小時'},
+                        {type:'food', title:'土家三下鍋', desc:'土家風味合鍋，臘肉、豆腐與蔬菜交織的麻辣香。', tags:['必吃','開胃']},
+                        {type:'food', title:'葛根粉', desc:'養生甜品，口感滑膩，清熱解毒。'}
+                    ],
+                    [
+                        {type:'spot', title:'袁家界 (哈利路亞山)', intro:'百龍天梯上山，阿凡達場景原型。', img:'https://images.unsplash.com/photo-1535025988589-d9967ba9874c?w=1200', address:'武陵源區袁家界'},
+                        {type:'food', title:'石耳燉雞', desc:'珍稀菌類燉湯，清淡滋補，適合長者。', tags:['必吃']}
+                    ],
+                    [
+                        {type:'spot', title:'天子山 & 金鞭溪', intro:'御筆峰日落、金鞭溪漫步吸氧。', img:'https://images.unsplash.com/photo-1626014903698-194162a86842?w=1200'},
+                        {type:'tips', text:'金鞭溪長度約5.7公里，請備水並適時休息。'}
+                    ],
+                    [
+                        {type:'spot', title:'天門山國家公園', intro:'世界最長索道與天門洞。', img:'https://images.unsplash.com/photo-1563812273673-82b5247948a7?w=1200'},
+                        {type:'food', title:'土家臘肉', desc:'松枝煙燻臘肉，風味濃郁。', tags:['必吃','伴手禮']},
+                        {type:'food', title:'血粑豆腐', desc:'鹹香軟糯的在地小吃。'}
+                    ],
+                    [ {type:'transport', mode:'train', route:'張家界西 → 深圳北', time:'返程'} ]
+                ]
+            },
+            planB: {
+                days:["Day 1 過早文化","Day 2 黃鶴樓","Day 3 東湖與省博","Day 4 漢口老味","Day 5 返程"],
+                content:[
+                    [ {type:'transport', mode:'train', route:'深圳北 → 武漢站', time:'約 4.5 小時'}, {type:'food', title:'熱乾麵', desc:'武漢過早之王，芝麻醬拌麵，筋道回甘', tags:['必吃']}, {type:'food', title:'三鮮豆皮', desc:'外酥內軟，糯米與餡料的絕配'} ],
+                    [ {type:'spot', title:'黃鶴樓', intro:'江南三大名樓，登樓遠眺長江。', img:'https://images.unsplash.com/photo-1599571343729-1a774b977603?w=1200'}, {type:'food', title:'武昌魚', desc:'清蒸或紅燒皆宜，魚肉鮮嫩。'} ],
+                    [ {type:'spot', title:'東湖風景區 & 湖北省博物館', intro:'參觀曾侯乙編鐘與越王勾踐劍。'}, {type:'food', title:'排骨藕湯', desc:'滋補暖胃，適合長者。'} ],
+                    [ {type:'spot', title:'漢口租界 (江漢路)', intro:'萬國建築與老字號小吃。'}, {type:'food', title:'精武鴨脖', desc:'滷味經典，適合外帶'} ],
+                    [ {type:'transport', mode:'train', route:'武漢站 → 深圳北', time:'返程'} ]
+                ]
+            },
+            planC: {
+                days:["Day 1 坡子街","Day 2 嶽麓書院","Day 3 省博與小吃","Day 4 橘子洲頭","Day 5 返程"],
+                content:[
+                    [ {type:'transport', mode:'train', route:'深圳北 → 長沙南', time:'最快 3.5 小時'}, {type:'food', title:'長沙臭豆腐', desc:'外酥內嫩，淋上蒜蓉與辣醬', tags:['必吃']}, {type:'food', title:'糖油粑粑', desc:'甜而不膩的糯米炸點心'} ],
+                    [ {type:'spot', title:'嶽麓書院', intro:'千年學府，惟楚有材。', img:'https://images.unsplash.com/photo-1598967919864-4e9411985396?w=1200'}, {type:'food', title:'剁椒魚頭', desc:'湘菜代表，重口味但極香'} ],
+                    [ {type:'spot', title:'湖南省博物館 (馬王堆)', intro:'辛追夫人與絲綢紡織展示。'}, {type:'food', title:'火宮殿小吃', desc:'集合長沙老字號小吃，一次嚐遍'} ],
+                    [ {type:'spot', title:'橘子洲頭', intro:'毛澤東青年時期足跡，夜景佳。'}, {type:'food', title:'口味蝦', desc:'夜宵頂配，大量辣椒與香料', tags:['必吃'] } ],
+                    [ {type:'transport', mode:'train', route:'長沙南 → 深圳北', time:'返程'} ]
+                ]
+            },
+            planD: {
+                days:["Day 1 南昌滋補","Day 2 景德鎮","Day 3 古窯民俗","Day 4 贛菜體驗","Day 5 返程"],
+                content:[
+                    [ {type:'transport', mode:'train', route:'深圳北 → 南昌西', time:'約 5.5 小時'}, {type:'food', title:'南昌瓦罐湯', desc:'清淡滋補，適合早晨飲用'} ],
+                    [ {type:'spot', title:'滕王閣 → 景德鎮', intro:'名樓與千年瓷都的結合。'}, {type:'food', title:'景德鎮冷粉', desc:'粗米粉拌料，辣而香'} ],
+                    [ {type:'spot', title:'古窯民俗博覽區', intro:'觀賞傳統製瓷工藝。'} , {type:'food', title:'餃子粑', desc:'米粉製作的傳統點心'} ],
+                    [ {type:'spot', title:'陶溪川文創區', intro:'紅磚廠房改造的文創集散地。'}, {type:'food', title:'瓷泥煨雞', desc:'荷葉包裹、瓷泥文火煨烤的特色料理'} ],
+                    [ {type:'transport', mode:'train', route:'南昌西 → 深圳北', time:'返程'} ]
+                ]
+            }
+        };
+
+        /* ---------- 互動與渲染邏輯 ---------- */
+        let currentPlan='summary';
+        let currentDay=0;
+
+        function switchPlan(key){
+            currentPlan=key; currentDay=0;
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+            const btn=document.querySelector(`.tab[data-key='${key}']`);
+            if(btn) btn.classList.add('active');
+            render();
+        }
+
+        function switchDay(idx){ currentDay=idx; render(); }
+
+        function render(){
+            const content=document.getElementById('contentArea');
+            const dayNav=document.getElementById('dayNav');
+            if(currentPlan==='summary'){
+                dayNav.style.display='none';
+                content.innerHTML=renderSummary();
+                return;
+            }
+
+            dayNav.style.display='flex';
+            const plan=travelData[currentPlan];
+            // day nav
+            dayNav.innerHTML=plan.days.map((d,i)=>`<div class="day-pill ${i===currentDay? 'active':''}" onclick="switchDay(${i})">${d}</div>`).join('');
+
+            // day content
+            const dayItems=plan.content[currentDay] || [];
+            let html=`<div class="day-card">
+                <div class="day-header"><div class="day-num">${currentDay+1}</div><div class="day-title">${plan.days[currentDay] || ''}</div></div>
+                <div class="item-card">`;
+
+            dayItems.forEach(item=> html += createCardHTML(item));
+            html += '</div></div>';
+            content.innerHTML = html;
+
+            // 簡單滑動支援：左右滑可以切日
+            enableSwipe(document.querySelector('.day-card'));
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        function renderSummary(){
+            const plans=travelData.summary.plans;
+            let html='<div style="margin-top:18px">';
+            html += '<div class="summary-grid">';
+            plans.forEach(p=>{
+                html += `<div class="summary-card" onclick="switchPlan('${p.id}')">
+                    <div style="font-weight:900; font-size:16px; margin-bottom:6px">${p.title}</div>
+                    <div style="color:var(--muted); font-size:14px">${p.desc}</div>
+                    <div style="text-align:right; margin-top:8px; color:var(--muted); font-size:13px">查看詳情 ➔</div>
+                </div>`;
+            });
+            html += '</div></div>';
+            return html;
+        }
+
+        /* 智慧文字亮顯：偵測關鍵詞並加上標籤 */
+        function highlightSmart(text){
+            if(!text) return '';
+            // 關鍵詞 map -> 類別
+            const patterns = [
+                {re:/必(吃|食|點)/g, cls:'food', label:'必吃'},
+                {re:/伴手禮|必買/g, cls:'buy', label:'伴手禮'},
+                {re:/推薦|建議/g, cls:'info', label:'推薦'}
+            ];
+            let out = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            patterns.forEach(p=>{
+                out = out.replace(p.re, match => `<span class="badge ${p.cls}">${match}</span>`);
+            });
+            return out;
+        }
+
+        function createCardHTML(item){
+            if(item.type==='header') return `<h3 style="margin:18px 0 6px; font-size:18px">${item.text}</h3>`;
+            if(item.type==='transport'){
+                return `<div class="transport-card">
+                    <div class="transport-line">
+                        <div class="transport-icon">🚄</div>
+                        <div>
+                            <div class="transport-desc">${item.route}</div>
+                            <div class="meta">${item.time || ''}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            if(item.type==='spot'){
+                const imgHTML = item.img? `<div class="spot-media"><img src="${item.img}" alt="${item.title}"></div>` : '';
+                const addr = item.address? `<div class="meta">📍 ${item.address}</div>` : '';
+                const navLink = createMapLink(item.title, item.address);
+                return `<div class="spot-card">${imgHTML}
+                    <div class="spot-content">
+                        <div class="spot-title">${item.title}</div>
+                        <div class="spot-desc">${item.intro || ''}</div>
+                        ${addr}
+                        <div style="margin-top:10px"><button class="nav-btn" onclick="openMap(event,'${navLink}')">導航 ↗</button></div>
+                    </div>
+                </div>`;
+            }
+
+            if(item.type==='food'){
+                const tagsHTML = (item.tags||[]).map(t=> `<div class="badge ${mapTagClass(t)}">${t}</div>`).join('');
+                const desc = highlightSmart(item.desc || '');
+                const navLink = createMapLink(item.title, item.address||'');
+                return `<div class="food-card">
+                    <div class="food-title">${item.title}</div>
+                    <div class="food-desc">${desc}</div>
+                    <div class="food-tags">${tagsHTML}</div>
+                    <div class="meta-row"><div class="meta">${item.cuisine || ''}</div><div style="flex:1"></div><button class="nav-btn" onclick="openMap(event,'${navLink}')">導航</button></div>
+                </div>`;
+            }
+
+            if(item.type==='tips' || item.type==='info'){
+                return `<div style="background:#FFF8E6; padding:12px; border-radius:12px; margin-top:8px; font-weight:700; color:#7E5A00">💡 ${item.text || item.desc}</div>`;
+            }
+
+            return `<div style="padding:8px; color:var(--muted);">${item.title||item.text||''}</div>`;
+        }
+
+        function mapTagClass(tag){
+            if(/必(吃|食|點)/.test(tag)) return 'food';
+            if(/伴手禮|必買/.test(tag)) return 'buy';
+            return 'info';
+        }
+
+        function createMapLink(title,address){
+            const q = encodeURIComponent((address || title));
+            return `https://www.google.com/maps/search/?api=1&query=${q}`;
+        }
+
+        function openMap(e,url){ e.stopPropagation(); window.open(url, '_blank'); }
+
+        /* 簡單的左右滑動切換（手機友好） */
+        function enableSwipe(el){
+            if(!el) return;
+            let startX=0, endX=0;
+            el.addEventListener('touchstart', (ev)=> startX = ev.touches[0].clientX );
+            el.addEventListener('touchmove', (ev)=> endX = ev.touches[0].clientX );
+            el.addEventListener('touchend', ()=>{
+                const dx = endX - startX;
+                if(Math.abs(dx) < 40) return;
+                if(dx < 0){ // left swipe -> next day
+                    const plan = travelData[currentPlan]; if(currentDay < plan.days.length-1){ currentDay++; render(); }
+                } else { // right swipe -> prev day
+                    if(currentDay > 0){ currentDay--; render(); }
+                }
+            });
+        }
+
+        // 初始化
+        render();
+
+    </script>
+</body>
+</html>
